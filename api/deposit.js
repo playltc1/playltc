@@ -22,7 +22,7 @@
  *   SOLANA_RPC_URL            optional, a Solana RPC endpoint (defaults to the public one)
  */
 
-const MIN_USD = 0.25;
+const MIN_USD = 0.10;
 const MAX_USD = 1000;
 const SEND_WINDOW_MS = 30 * 60 * 1000; // time the user has to send the payment
 const CONFIRM_GRACE_S = 30 * 60;       // a payment sent in time may confirm this long after the window
@@ -311,7 +311,7 @@ async function handler(req, res) {
     const m = /^Bearer (.+)$/.exec(req.headers.authorization || "");
     if (!m) throw httpErr(401, "Log in first.");
     let uid;
-    try { uid = (await a.auth().verifyIdToken(m[1])).uid; } catch (e) { throw httpErr(401, "Log in again."); }
+    try { uid = (await a.auth().verifyIdToken(m[1])).uid; } catch (e) { console.error("deposit: token check failed:", e && e.message); throw httpErr(401, "Log in again."); }
 
     if (body.action === "create") await create(d, uid, Number(body.usd), String(body.chain || "ltc"));
     else if (body.action === "cancel") {
