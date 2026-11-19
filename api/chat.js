@@ -26,7 +26,7 @@ function init() {
     if (!admin.apps.length) {
       admin.initializeApp({
         credential: admin.credential.cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)),
-        databaseURL: process.env.FIREBASE_DB_URL || "https://playltcwtf-default-rtdb.firebaseio.com"
+        databaseURL: process.env.FIREBASE_DB_URL || "https://playltc-default-rtdb.firebaseio.com"
       });
     }
   }
