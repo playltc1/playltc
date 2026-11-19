@@ -50,6 +50,17 @@ function init() {
   return admin;
 }
 
+// A brand-new login token can be refused for a second or two if this server's clock is slightly behind ("used too early"). Retry briefly.
+async function verifyToken(a, t) {
+  for (let i = 0; ; i++) {
+    try { return await a.auth().verifyIdToken(t); }
+    catch (e) {
+      if (i < 3 && /too early/i.test((e && e.message) || "")) { await new Promise(function (r) { setTimeout(r, 1500); }); continue; }
+      throw e;
+    }
+  }
+}
+
 async function getJson(url) {
   const r = await fetch(url, { signal: AbortSignal.timeout(FETCH_MS), headers: { accept: "application/json" } });
   if (!r.ok) throw new Error("HTTP " + r.status + " " + url);
@@ -311,7 +322,7 @@ async function handler(req, res) {
     const m = /^Bearer (.+)$/.exec(req.headers.authorization || "");
     if (!m) throw httpErr(401, "Log in first.");
     let uid;
-    try { uid = (await a.auth().verifyIdToken(m[1])).uid; } catch (e) { console.error("deposit: token check failed:", e && e.message); throw httpErr(401, "Log in again."); }
+    try { uid = (await verifyToken(a, m[1])).uid; } catch (e) { console.error("deposit: token check failed:", e && e.message); throw httpErr(401, "Log in again."); }
 
     if (body.action === "create") await create(d, uid, Number(body.usd), String(body.chain || "ltc"));
     else if (body.action === "cancel") {
