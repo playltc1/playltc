@@ -27,6 +27,17 @@ function init() {
   return admin;
 }
 
+// A brand-new login token can be refused for a second or two if this server's clock is slightly behind ("used too early"). Retry briefly.
+async function verifyToken(a, t) {
+  for (let i = 0; ; i++) {
+    try { return await a.auth().verifyIdToken(t); }
+    catch (e) {
+      if (i < 3 && /too early/i.test((e && e.message) || "")) { await new Promise(function (r) { setTimeout(r, 1500); }); continue; }
+      throw e;
+    }
+  }
+}
+
 function httpErr(status, message) { const e = new Error(message); e.status = status; return e; }
 
 // "badges/bob" or "muted/bo%20b" -> clean path, or throws.
@@ -50,7 +61,7 @@ async function handler(req, res) {
     if (!m) throw httpErr(401, "Log in again.");
     const a = init();
     let tok;
-    try { tok = await a.auth().verifyIdToken(m[1]); } catch (e) { console.error("admin: token check failed:", e && e.message); throw httpErr(401, "Log in again."); }
+    try { tok = await verifyToken(a, m[1]); } catch (e) { console.error("admin: token check failed:", e && e.message); throw httpErr(401, "Log in again."); }
     if (String(tok.email || "").toLowerCase() !== OWNER_EMAIL) throw httpErr(403, "Owner only.");
 
     const method = String(body.method || "GET").toUpperCase();
