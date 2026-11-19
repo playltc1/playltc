@@ -33,6 +33,17 @@ function init() {
   return admin;
 }
 
+// A brand-new login token can be refused for a second or two if this server's clock is slightly behind ("used too early"). Retry briefly.
+async function verifyToken(a, t) {
+  for (let i = 0; ; i++) {
+    try { return await a.auth().verifyIdToken(t); }
+    catch (e) {
+      if (i < 3 && /too early/i.test((e && e.message) || "")) { await new Promise(function (r) { setTimeout(r, 1500); }); continue; }
+      throw e;
+    }
+  }
+}
+
 // ---- the filter -------------------------------------------------------------------------
 const LEET = { "0": "o", "1": "i", "3": "e", "4": "a", "5": "s", "7": "t", "@": "a", "$": "s", "!": "i", "|": "i", "+": "t" };
 const HOMO = { "\u0430": "a", "\u0435": "e", "\u043e": "o", "\u0441": "c", "\u0440": "p", "\u0445": "x", "\u0443": "y", "\u0456": "i", "\u0455": "s" };
@@ -85,7 +96,7 @@ async function handler(req, res) {
     if (!m) return res.status(401).json({ error: "Log in again." });
     const a = init();
     let tok;
-    try { tok = await a.auth().verifyIdToken(m[1]); } catch (e) {
+    try { tok = await verifyToken(a, m[1]); } catch (e) {
       // If this says the token has an incorrect "aud" (audience), the service account in Vercel is from a different Firebase project than the site's login.
       console.error("chat: token check failed:", e && e.message);
       return res.status(401).json({ error: "Log in again." });
