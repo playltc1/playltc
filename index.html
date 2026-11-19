@@ -935,15 +935,19 @@ h1 { text-shadow: 0 4px 0 rgba(0,0,0,.28), 0 0 60px rgba(255,59,59,.18); animati
   function say2(t) { $("oMsg").textContent = t; }
   function odb(method, path, body, query) {
     if (!isOwner()) return Promise.reject(new Error("denied"));
+    // Owner actions go through /api/admin (checked on the server), so they don't depend on the database Rules.
     return token().then(function (tok) {
-      return fetch(DB.replace(/\/$/, "") + "/" + path + ".json?" + (query ? query + "&" : "") + "auth=" + encodeURIComponent(tok),
-        { method: method, body: body === undefined ? undefined : JSON.stringify(body) });
+      return fetch("/api/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + tok },
+        body: JSON.stringify({ method: method, path: path, body: body, shallow: query === "shallow=true" })
+      });
     }).then(function (r) {
       if (!r.ok) throw new Error(r.status === 401 || r.status === 403 ? "denied" : "failed");
       return r.json();
     });
   }
-  function oerr(e) { say2(e.message === "denied" ? "Permission denied. Publish the new Rules in Firebase first." : "Something went wrong. Try again."); }
+  function oerr(e) { say2(e.message === "denied" ? "Not allowed. Log out and back in as the owner account (123), then try again." : "Something went wrong. Try again."); }
   function count(o) { return o ? Object.keys(o).length : 0; }
 
   function newestUsers(d) {
