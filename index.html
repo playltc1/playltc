@@ -638,7 +638,8 @@ h1 { text-shadow: 0 4px 0 rgba(0,0,0,.28), 0 0 60px rgba(255,59,59,.18); animati
       <label class="field"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg><input id="fUser" placeholder="Username" maxlength="16" autocapitalize="off" aria-label="Username"></label>
       <label class="field"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><input id="fPass" type="password" placeholder="Password" aria-label="Password"><button class="eye" type="button" aria-label="Show password"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button></label>
       <label class="field su"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><input id="fPass2" type="password" placeholder="Confirm password" aria-label="Confirm password"><button class="eye" type="button" aria-label="Show password"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button></label>
-      <label class="field su"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h13v4"/><path d="M3 7v11a2 2 0 0 0 2 2h15V9H5a2 2 0 0 1-2-2z"/></svg><input id="fLtc" placeholder="Your Litecoin or Solana address" maxlength="100" autocapitalize="off" spellcheck="false" aria-label="Your Litecoin or Solana address"></label>
+      <label class="field su"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h13v4"/><path d="M3 7v11a2 2 0 0 0 2 2h15V9H5a2 2 0 0 1-2-2z"/></svg><input id="fLtc" placeholder="Your Litecoin address" maxlength="100" autocapitalize="off" spellcheck="false" aria-label="Your Litecoin address"></label>
+      <label class="field su"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h13v4"/><path d="M3 7v11a2 2 0 0 0 2 2h15V9H5a2 2 0 0 1-2-2z"/></svg><input id="fSol" placeholder="Your Solana address" maxlength="60" autocapitalize="off" spellcheck="false" aria-label="Your Solana address"></label>
       <label class="check su"><input id="fRefOn" type="checkbox">Referral Code (Optional)</label>
       <label class="field su" id="refField" hidden><input id="fRef" placeholder="coming soon" maxlength="24" aria-label="Referral code (coming soon)" disabled></label>
       <label class="check su"><input id="fTerms" type="checkbox">I accept the <u>Terms of Service</u></label>
@@ -1072,7 +1073,7 @@ h1 { text-shadow: 0 4px 0 rgba(0,0,0,.28), 0 0 60px rgba(255,59,59,.18); animati
   function copyText(t) { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).catch(function () {}); }
   function showUsers() {
     var q = $("oFind").value.trim().toLowerCase(), box = $("oUsers"); box.textContent = "";
-    var arr = userCache.filter(function (u) { return !q || u.username.toLowerCase().indexOf(q) > -1 || String(u.ltc || "").toLowerCase().indexOf(q) > -1; });
+    var arr = userCache.filter(function (u) { return !q || u.username.toLowerCase().indexOf(q) > -1 || String(u.ltc || "").toLowerCase().indexOf(q) > -1 || String(u.sol || "").toLowerCase().indexOf(q) > -1; });
     if (!arr.length) { box.appendChild(hel("div", "oitem", "No users found.")); return; }
     arr.forEach(function (u) {
       var row = hel("div", "oitem"), info = hel("span"), btns = hel("span", "obtns"), pick = hel("button", null, "Pick");
@@ -1088,11 +1089,12 @@ h1 { text-shadow: 0 4px 0 rgba(0,0,0,.28), 0 0 60px rgba(255,59,59,.18); animati
       pick.type = "button";
       pick.addEventListener("click", function () { $("oUser").value = u.username; $("oMute").value = u.username; say2("Picked " + u.username + "."); });
       btns.appendChild(pick);
-      if (u.ltc) {
-        var cp = hel("button", null, "Copy"); cp.type = "button";
-        cp.addEventListener("click", function () { copyText(String(u.ltc)); say2("Address copied."); });
+      [["LTC", u.ltc], ["SOL", u.sol]].forEach(function (a) {
+        if (!a[1]) return;
+        var cp = hel("button", null, a[0]); cp.type = "button"; cp.title = "Copy " + a[0] + " address";
+        cp.addEventListener("click", function () { copyText(String(a[1])); say2(a[0] + " address copied."); });
         btns.appendChild(cp);
-      }
+      });
       row.appendChild(info); row.appendChild(btns); box.appendChild(row);
     });
   }
@@ -1103,8 +1105,8 @@ h1 { text-shadow: 0 4px 0 rgba(0,0,0,.28), 0 0 60px rgba(255,59,59,.18); animati
   $("oCsv").addEventListener("click", function () {
     odb("GET", "users").then(function (d) {
       var list2 = newestUsers(d);
-      var rows = [["username", "joined", "wallet_address", "referral"]].concat(list2.map(function (u) {
-        return [u.username, typeof u.ts === "number" ? new Date(u.ts).toISOString() : "", u.ltc || "", u.referral || ""];
+      var rows = [["username", "joined", "litecoin_address", "solana_address", "referral"]].concat(list2.map(function (u) {
+        return [u.username, typeof u.ts === "number" ? new Date(u.ts).toISOString() : "", u.ltc || "", u.sol || "", u.referral || ""];
       }));
       var csv = rows.map(function (r) {
         return r.map(function (c) {
@@ -1365,14 +1367,14 @@ h1 { text-shadow: 0 4px 0 rgba(0,0,0,.28), 0 0 60px rgba(255,59,59,.18); animati
     if (p.length < 6) { errEl.textContent = "Password must be at least 6 characters."; return; }
     if (signup && p !== $("fPass2").value) { errEl.textContent = "Passwords don\u2019t match."; return; }
     if (signup && !$("fTerms").checked) { errEl.textContent = "Accept the Terms of Service to continue."; return; }
-    var ltc = $("fLtc").value.trim();
-    if (signup && !ltc) { errEl.textContent = "Enter your Litecoin or Solana address."; return; }
-    if (signup && ltc === "LbJjLAgrb28BgnnjF1s85ffrRBNYDkchpn") { errEl.textContent = "You\u2019re not allowed to use the website\u2019s assigned wallet."; return; }
+    var ltc = $("fLtc").value.trim(), sol = $("fSol").value.trim();
+    if (signup && !ltc) { errEl.textContent = "Enter your Litecoin address."; return; }
+    if (signup && !sol) { errEl.textContent = "Enter your Solana address."; return; }
+    if (signup && (ltc === "LbJjLAgrb28BgnnjF1s85ffrRBNYDkchpn" || sol === "EbR54AxKXDWnkyifxRPkFZAzDTN4KRzzEg7sBmrawLAP")) { errEl.textContent = "You\u2019re not allowed to use the website\u2019s assigned wallet."; return; }
     if (!DB || !KEY) { errEl.textContent = "Accounts aren\u2019t connected yet."; return; }
     goBtn.disabled = true; errEl.textContent = "";
     var ref = $("fRefOn").checked ? $("fRef").value.trim().slice(0, 24) : "";
-    (signup ? validWallet(ltc) : Promise.resolve(true)).then(function (ok) {
-      if (!ok) throw new Error("BADLTC");
+    (signup ? validLtc(ltc).then(function (ok) { if (!ok) throw new Error("BADLTC"); if (!solOk(sol)) throw new Error("BADSOL"); return true; }) : Promise.resolve(true)).then(function () {
       return api("https://identitytoolkit.googleapis.com/v1/accounts:" + (signup ? "signUp" : "signInWithPassword") + "?key=" + KEY,
         { email: u + MAIL, password: p, returnSecureToken: true });
     }).then(function (d) {
@@ -1381,10 +1383,10 @@ h1 { text-shadow: 0 4px 0 rgba(0,0,0,.28), 0 0 60px rgba(255,59,59,.18); animati
       setSession(s);
       if (!signup) return;
       return fetch(base + "/users/" + s.uid + ".json?auth=" + encodeURIComponent(s.token), {
-        method: "PUT", body: JSON.stringify({ username: u, referral: ref, ltc: ltc, ts: { ".sv": "timestamp" } })
+        method: "PUT", body: JSON.stringify({ username: u, referral: ref, ltc: ltc, sol: sol, ts: { ".sv": "timestamp" } })
       });
     }).then(function () { closeModal(); input.focus(); })
-      .catch(function (err) { errEl.textContent = err.message === "BADLTC" ? "That doesn\u2019t look like a valid Litecoin or Solana address. Check it and try again." : nice(err.message); })
+      .catch(function (err) { errEl.textContent = err.message === "BADLTC" ? "That doesn\u2019t look like a valid Litecoin address. Check it and try again." : err.message === "BADSOL" ? "That doesn\u2019t look like a valid Solana address. Check it and try again." : nice(err.message); })
       .then(function () { goBtn.disabled = false; });
   });
 
