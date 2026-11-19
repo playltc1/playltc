@@ -16,7 +16,7 @@
  *
  * Env vars (Vercel -> Project -> Settings -> Environment Variables)
  *   FIREBASE_SERVICE_ACCOUNT  the whole service-account JSON, pasted as one value
- *   FIREBASE_DB_URL           optional, defaults to the playltcwtf database
+ *   FIREBASE_DB_URL           optional, defaults to the playltc database
  *   CRON_SECRET               optional, enables the "sweep" action for the GitHub cron
  *   SOL_WALLET                your Solana receiving address (Solana deposits stay off until this is set)
  *   SOLANA_RPC_URL            optional, a Solana RPC endpoint (defaults to the public one)
@@ -43,7 +43,7 @@ function init() {
     if (!admin.apps.length) {
       admin.initializeApp({
         credential: admin.credential.cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)),
-        databaseURL: process.env.FIREBASE_DB_URL || "https://playltcwtf-default-rtdb.firebaseio.com"
+        databaseURL: process.env.FIREBASE_DB_URL || "https://playltc-default-rtdb.firebaseio.com"
       });
     }
   }
