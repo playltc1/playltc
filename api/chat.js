@@ -85,7 +85,11 @@ async function handler(req, res) {
     if (!m) return res.status(401).json({ error: "Log in again." });
     const a = init();
     let tok;
-    try { tok = await a.auth().verifyIdToken(m[1]); } catch (e) { return res.status(401).json({ error: "Log in again." }); }
+    try { tok = await a.auth().verifyIdToken(m[1]); } catch (e) {
+      // If this says the token has an incorrect "aud" (audience), the service account in Vercel is from a different Firebase project than the site's login.
+      console.error("chat: token check failed:", e && e.message);
+      return res.status(401).json({ error: "Log in again." });
+    }
     const email = String(tok.email || "");
     if (!email.endsWith(MAIL)) return res.status(403).json({ error: "Not allowed." });
     const name = email.slice(0, -MAIL.length);
@@ -102,9 +106,14 @@ async function handler(req, res) {
       return res.status(403).json({ error: "blocked", until: end });
     }
 
+    // One message per second per user, enforced here so nobody can skip the page's own limit.
+    const rl = await db.ref("rl/chat/" + tok.uid).transaction((t) => (Date.now() - (Number(t) || 0) < 1000 ? undefined : Date.now()));
+    if (!rl.committed) return res.status(429).json({ error: "Slow down." });
+
     await db.ref("messages").push({ name, uid: tok.uid, text, ts: a.database.ServerValue.TIMESTAMP });
     return res.status(200).json({ ok: true });
   } catch (e) {
+    console.error("chat:", e && e.message);   // shows up in Vercel -> Logs
     return res.status(500).json({ error: "Something went wrong. Try again." });
   }
 }
