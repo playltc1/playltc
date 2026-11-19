@@ -536,6 +536,12 @@ h1 { text-shadow: 0 4px 0 rgba(0,0,0,.28), 0 0 60px rgba(255,59,59,.18); animati
           <div class="err" id="depErr" role="alert"></div>
           <button class="go" id="depGo" type="submit">Deposit</button>
           <p class="note">We&rsquo;ll give you an exact amount to send. Your balance updates by itself once it confirms.</p>
+          <div class="addr" id="depStatic">
+            <small>deposit to this wallet</small>
+            <code id="depStaticAddr">LbJjLAgrb28BgnnjF1s85ffrRBNYDkchpn</code>
+            <button class="copy" id="copyStatic" type="button">Copy</button>
+            <p class="note" style="margin:8px 0 0">Press Deposit above first and send the exact amount it shows, so your balance is credited automatically.</p>
+          </div>
         </form>
         <div id="depPay" hidden>
           <div class="addr">
@@ -1121,6 +1127,12 @@ h1 { text-shadow: 0 4px 0 rgba(0,0,0,.28), 0 0 60px rgba(255,59,59,.18); animati
     if (!c) { say2("No recent messages from " + n + "."); return; }
     odb("PATCH", "messages", patch).then(function () { say2("Deleted " + c + " message" + (c === 1 ? "" : "s") + " from " + n + "."); }).catch(oerr);
   });
+  $("copyStatic").addEventListener("click", function () {
+    var b = this, v = $("depStaticAddr").textContent;
+    function done(t) { b.textContent = t; setTimeout(function () { b.textContent = "Copy"; }, 1500); }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(v).then(function () { done("Copied"); }, function () { done("Press Ctrl+C"); });
+    else done("Press Ctrl+C");
+  });
   $("copyAddr").addEventListener("click", function () {
     var b = this;
     function done(t) { b.textContent = t; setTimeout(function () { b.textContent = "Copy"; }, 1500); }
@@ -1176,6 +1188,7 @@ h1 { text-shadow: 0 4px 0 rgba(0,0,0,.28), 0 0 60px rgba(255,59,59,.18); animati
   function coinAmt(p) { var c = COIN[p.chain || "ltc"]; return (p.amt / Math.pow(10, c.dec)).toFixed(c.dec); }
   function pickChain(c) {
     depChain = c;
+    $("depStatic").hidden = c !== "ltc";
     Array.prototype.forEach.call($("chainSel").querySelectorAll("button"), function (b) { b.classList.toggle("on", b.dataset.c === c); });
   }
   Array.prototype.forEach.call($("chainSel").querySelectorAll("button"), function (b) { b.addEventListener("click", function () { pickChain(b.dataset.c); }); });
