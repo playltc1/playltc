@@ -18,7 +18,7 @@
  *   FIREBASE_SERVICE_ACCOUNT  the whole service-account JSON, pasted as one value
  *   FIREBASE_DB_URL           optional, defaults to the playltc database
  *   CRON_SECRET               optional, enables the "sweep" action for the GitHub cron
- *   SOL_WALLET                your Solana receiving address (Solana deposits stay off until this is set)
+ *   SOL_WALLET                optional, overrides the built-in Solana receiving address
  *   SOLANA_RPC_URL            optional, a Solana RPC endpoint (defaults to the public one)
  */
 
@@ -32,7 +32,7 @@ const TIERS = [["Bronze", 2], ["Silver", 5], ["Gold", 10], ["Platinum", 15], ["D
 
 const CHAINS = {
   ltc: { name: "Litecoin", symbol: "LTC", decimals: 8, address: "LbJjLAgrb28BgnnjF1s85ffrRBNYDkchpn", spread: 9999, cb: "LTC-USD", cg: "litecoin" },
-  sol: { name: "Solana", symbol: "SOL", decimals: 9, address: (process.env.SOL_WALLET || "").trim(), spread: 99999, cb: "SOL-USD", cg: "solana" }
+  sol: { name: "Solana", symbol: "SOL", decimals: 9, address: (process.env.SOL_WALLET || "EbR54AxKXDWnkyifxRPkFZAzDTN4KRzzEg7sBmrawLAP").trim(), spread: 99999, cb: "SOL-USD", cg: "solana" }
 };
 const SOL_RPC = process.env.SOLANA_RPC_URL || "https://api.mainnet-beta.solana.com";
 
