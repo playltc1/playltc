@@ -1188,7 +1188,7 @@ h1 { text-shadow: 0 4px 0 rgba(0,0,0,.28), 0 0 60px rgba(255,59,59,.18); animati
   function coinAmt(p) { var c = COIN[p.chain || "ltc"]; return (p.amt / Math.pow(10, c.dec)).toFixed(c.dec); }
   function pickChain(c) {
     depChain = c;
-    $("depStatic").hidden = c !== "ltc";
+    $("depStaticAddr").textContent = c === "sol" ? "EbR54AxKXDWnkyifxRPkFZAzDTN4KRzzEg7sBmrawLAP" : "LbJjLAgrb28BgnnjF1s85ffrRBNYDkchpn";
     Array.prototype.forEach.call($("chainSel").querySelectorAll("button"), function (b) { b.classList.toggle("on", b.dataset.c === c); });
   }
   Array.prototype.forEach.call($("chainSel").querySelectorAll("button"), function (b) { b.addEventListener("click", function () { pickChain(b.dataset.c); }); });
